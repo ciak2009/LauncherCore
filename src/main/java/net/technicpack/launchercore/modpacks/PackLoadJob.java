@@ -100,7 +100,7 @@ public class PackLoadJob implements Runnable {
                     @Override
                     public void run() {
                         for (PackInfo info : packSource.getPublicPacks()) {
-                            addPackThreadSafe(null, info, packSource.getPriority(info));
+                            addPackThreadSafe(null, info, packSource.getPriority(info), packSource.isOfficialPack(info.getName()));
                         }
                     }
                 };
@@ -134,12 +134,21 @@ public class PackLoadJob implements Runnable {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                addPack(pack, packInfo, priority);
+                addPack(pack, packInfo, priority, false);
             }
         });
     }
 
-    protected void addPack(final InstalledPack pack, final PackInfo packInfo, final int priority) {
+    protected void addPackThreadSafe(final InstalledPack pack, final PackInfo packInfo, final int priority, final boolean official) {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                addPack(pack, packInfo, priority, official);
+            }
+        });
+    }
+
+    protected void addPack(final InstalledPack pack, final PackInfo packInfo, final int priority, final boolean official) {
         if (pack == null && packInfo == null || isCancelled)
             return;
 
@@ -157,10 +166,16 @@ public class PackLoadJob implements Runnable {
             if (packInfo != null) {
                 modpack.setPackInfo(packInfo);
                 modpack.updatePriority(priority);
+
+                if (official)
+                    modpack.setOfficial();
             }
         } else {
             modpack = new ModpackModel(pack, packInfo, packRepository, directories);
             modpack.updatePriority(priority);
+
+            if (official)
+                modpack.setOfficial();
 
             if (packInfo == null)
                 modpack.setIsPlatform(false);
