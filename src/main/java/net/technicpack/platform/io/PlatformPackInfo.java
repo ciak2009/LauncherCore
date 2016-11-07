@@ -46,6 +46,7 @@ public class PlatformPackInfo extends RestObject implements PackInfo {
     private Integer downloads;
     private boolean forceDir;
     private boolean isServer;
+    private String discordServerId;
     private ArrayList<FeedItem> feed = new ArrayList<FeedItem>();
 
     private transient boolean isLocal = false;
